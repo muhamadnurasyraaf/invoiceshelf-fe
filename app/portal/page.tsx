@@ -181,7 +181,9 @@ export default function PortalDashboardPage() {
         {/* Due Invoices */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Due Invoices</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Due Invoices
+            </h2>
             <Link
               href="/portal/invoices"
               className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
@@ -235,7 +237,9 @@ export default function PortalDashboardPage() {
                         {getStatusBadge(invoice.status)}
                       </td>
                       <td className="px-6 py-4 text-sm text-right text-gray-900">
-                        {formatCurrency(invoice.amountDue - invoice.amountPaid)}
+                        {formatCurrency(
+                          invoice.amountDue - invoice.amountPaid!,
+                        )}
                       </td>
                     </tr>
                   ))

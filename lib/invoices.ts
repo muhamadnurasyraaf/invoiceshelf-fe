@@ -34,6 +34,11 @@ export interface Invoice {
   customerId: string;
   customer: Customer;
   items: InvoiceItem[];
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

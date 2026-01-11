@@ -211,7 +211,7 @@ export default function PortalInvoiceDetailPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Subtotal</span>
               <span className="text-gray-900">
-                {formatCurrency(invoice.subTotal)}
+                {formatCurrency(invoice.subTotal || 0)}
               </span>
             </div>
             {invoice.tax && (
@@ -220,7 +220,7 @@ export default function PortalInvoiceDetailPage() {
                   Tax ({invoice.tax.name} - {invoice.tax.rate}%)
                 </span>
                 <span className="text-gray-900">
-                  {formatCurrency(invoice.taxAmount)}
+                  {formatCurrency(invoice.taxAmount || 0)}
                 </span>
               </div>
             )}
@@ -233,13 +233,13 @@ export default function PortalInvoiceDetailPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Amount Paid</span>
               <span className="text-green-600">
-                {formatCurrency(invoice.amountPaid)}
+                {formatCurrency(invoice.amountPaid || 0)}
               </span>
             </div>
             <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
               <span className="font-medium text-gray-900">Balance Due</span>
               <span className="font-bold text-red-600">
-                {formatCurrency(invoice.amountDue - invoice.amountPaid)}
+                {formatCurrency(invoice.amountDue - (invoice.amountPaid || 0))}
               </span>
             </div>
           </div>

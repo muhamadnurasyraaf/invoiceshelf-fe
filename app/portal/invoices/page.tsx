@@ -160,7 +160,7 @@ export default function PortalInvoicesPage() {
                       {formatCurrency(invoice.amountDue)}
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-900 font-medium">
-                      {formatCurrency(invoice.amountDue - invoice.amountPaid)}
+                      {formatCurrency(invoice.amountDue - invoice.amountPaid!)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

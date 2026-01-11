@@ -27,6 +27,11 @@ export interface Estimate {
   customerId: string;
   customer: Customer;
   items: EstimateItem[];
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
