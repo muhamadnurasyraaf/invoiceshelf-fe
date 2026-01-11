@@ -81,7 +81,7 @@ export default function NewPaymentPage() {
       const data = await invoiceService.getAll();
       // Filter to show only unpaid/partially paid invoices
       const unpaidInvoices = data.filter(
-        (inv) => inv.status !== "PAID" && inv.status !== "DRAFT"
+        (inv) => inv.status !== "PAID" && inv.status !== "DRAFT",
       );
       setInvoices(unpaidInvoices);
 
@@ -137,10 +137,7 @@ export default function NewPaymentPage() {
     <div className="max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Record Payment</h1>
-        <Link
-          href="/payments"
-          className="text-gray-600 hover:text-gray-900"
-        >
+        <Link href="/payments" className="text-gray-600 hover:text-gray-900">
           Cancel
         </Link>
       </div>
@@ -162,7 +159,7 @@ export default function NewPaymentPage() {
           </label>
           <select
             {...register("invoiceId")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           >
             <option value="">Select an invoice</option>
             {invoices.map((invoice) => (
@@ -202,7 +199,7 @@ export default function NewPaymentPage() {
                 <span className="ml-2 font-medium text-red-600">
                   {formatCurrency(
                     selectedInvoice.amountDue -
-                      (selectedInvoice.amountPaid || 0)
+                      (selectedInvoice.amountPaid || 0),
                   )}
                 </span>
               </div>
@@ -225,7 +222,7 @@ export default function NewPaymentPage() {
             type="number"
             step="0.01"
             {...register("amount", { valueAsNumber: true })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
           {errors.amount && (
             <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
@@ -239,7 +236,7 @@ export default function NewPaymentPage() {
           </label>
           <select
             {...register("paymentMethod")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           >
             {paymentMethodOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -262,7 +259,7 @@ export default function NewPaymentPage() {
           <input
             type="date"
             {...register("paymentDate")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
         </div>
 
@@ -275,7 +272,7 @@ export default function NewPaymentPage() {
             type="text"
             {...register("reference")}
             placeholder="e.g., TXN-123456"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
         </div>
 
@@ -287,7 +284,7 @@ export default function NewPaymentPage() {
           <textarea
             {...register("notes")}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
         </div>
 
