@@ -6,6 +6,7 @@ import { StatsCard } from "@/components/dashboard/stats-card";
 import { SalesChart } from "@/components/dashboard/sales-chart";
 import { DashboardStats, dashboardService } from "@/lib/dashboard";
 import { expenseCategoryLabels } from "@/lib/expenses";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -28,19 +29,7 @@ export default function DashboardPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (date: string) => formatDateLong(date);
 
   if (loading) {
     return (

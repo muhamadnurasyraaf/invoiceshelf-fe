@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { Payment, PaymentMethod, paymentService } from "@/lib/payments";
+import { formatCurrency } from "@/lib/format";
 
 const paymentSchema = z.object({
   amount: z.number().min(0.01, "Amount must be greater than 0"),
@@ -87,13 +88,6 @@ export default function EditPaymentPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -108,7 +102,10 @@ export default function EditPaymentPage() {
         <h2 className="text-xl font-semibold text-gray-900">
           Payment not found
         </h2>
-        <Link href="/payments" className="text-indigo-600 hover:text-indigo-900">
+        <Link
+          href="/payments"
+          className="text-indigo-600 hover:text-indigo-900"
+        >
           Back to Payments
         </Link>
       </div>

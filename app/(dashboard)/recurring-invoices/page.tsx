@@ -8,6 +8,7 @@ import {
   RecurringInvoiceStatus,
   RecurringFrequency,
 } from "@/lib/recurring-invoices";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 const statusColors: Record<
   RecurringInvoiceStatus,
@@ -62,12 +63,12 @@ export default function RecurringInvoicesPage() {
 
   const handleStatusChange = async (
     id: string,
-    status: RecurringInvoiceStatus
+    status: RecurringInvoiceStatus,
   ) => {
     try {
       const updated = await recurringInvoiceService.updateStatus(id, status);
       setRecurringInvoices(
-        recurringInvoices.map((r) => (r.id === id ? updated : r))
+        recurringInvoices.map((r) => (r.id === id ? updated : r)),
       );
     } catch {
       setError("Failed to update status");
@@ -84,26 +85,13 @@ export default function RecurringInvoicesPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (dateString: string) => formatDateLong(dateString);
 
   const calculateEstimatedAmount = (invoice: RecurringInvoice) => {
     return invoice.items.reduce(
       (total, item) => total + item.item.price * item.quantity,
-      0
+      0,
     );
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isLoading) {
@@ -281,7 +269,7 @@ export default function RecurringInvoicesPage() {
                       onChange={(e) =>
                         handleStatusChange(
                           recurring.id,
-                          e.target.value as RecurringInvoiceStatus
+                          e.target.value as RecurringInvoiceStatus,
                         )
                       }
                       className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer ${statusColors[recurring.status].bg} ${statusColors[recurring.status].text}`}

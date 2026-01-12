@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { estimateService, Estimate, EstimateStatus } from "@/lib/estimates";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 const statusColors: Record<EstimateStatus, { bg: string; text: string }> = {
   DRAFT: { bg: "bg-gray-100", text: "text-gray-700" },
@@ -54,20 +55,7 @@ export default function EstimatesPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (dateString: string) => formatDateLong(dateString);
 
   if (isLoading) {
     return (
@@ -211,7 +199,7 @@ export default function EstimatesPage() {
                       onChange={(e) =>
                         handleStatusChange(
                           estimate.id,
-                          e.target.value as EstimateStatus
+                          e.target.value as EstimateStatus,
                         )
                       }
                       className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer ${statusColors[estimate.status].bg} ${statusColors[estimate.status].text}`}

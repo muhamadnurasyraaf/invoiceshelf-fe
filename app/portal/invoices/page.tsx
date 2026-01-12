@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { portalService } from "@/lib/portal";
-import { Invoice } from "@/lib/invoices";
+import { Invoice, InvoiceStatus, PaymentStatus } from "@/lib/invoices";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 export default function PortalInvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -25,44 +26,31 @@ export default function PortalInvoicesPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-MY", {
-      style: "currency",
-      currency: "MYR",
-    }).format(amount);
+  const formatDate = (date: string) => formatDateLong(date);
+
+  const statusColors: Record<InvoiceStatus, { bg: string; text: string }> = {
+    DRAFT: { bg: "bg-gray-100", text: "text-gray-700" },
+    SENT: { bg: "bg-blue-100", text: "text-blue-700" },
+    VIEWED: { bg: "bg-purple-100", text: "text-purple-700" },
+    COMPLETED: { bg: "bg-green-100", text: "text-green-700" },
+    REJECTED: { bg: "bg-red-100", text: "text-red-700" },
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, string> = {
-      DRAFT: "bg-gray-100 text-gray-800",
-      SENT: "bg-blue-100 text-blue-800",
-      VIEWED: "bg-purple-100 text-purple-800",
-      PAID: "bg-green-100 text-green-800",
-      UNPAID: "bg-red-100 text-red-800",
-      OVERDUE: "bg-red-100 text-red-800",
-    };
-    return (
-      <span
-        className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[status] || "bg-gray-100 text-gray-800"}`}
-      >
-        {status}
-      </span>
-    );
+  const paymentStatusColors: Record<
+    PaymentStatus,
+    { bg: string; text: string }
+  > = {
+    UNPAID: { bg: "bg-yellow-100", text: "text-yellow-700" },
+    PARTIAL: { bg: "bg-orange-100", text: "text-orange-700" },
+    PAID: { bg: "bg-green-100", text: "text-green-700" },
+    OVERDUE: { bg: "bg-red-100", text: "text-red-700" },
   };
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filter === "all") return true;
     if (filter === "unpaid")
-      return ["SENT", "VIEWED", "UNPAID", "OVERDUE"].includes(invoice.status);
-    if (filter === "paid") return invoice.status === "PAID";
+      return ["UNPAID", "PARTIAL", "OVERDUE"].includes(invoice.paymentStatus);
+    if (filter === "paid") return invoice.paymentStatus === "PAID";
     return true;
   });
 
@@ -154,7 +142,20 @@ export default function PortalInvoicesPage() {
                       {formatDate(invoice.dueDate)}
                     </td>
                     <td className="px-6 py-4">
-                      {getStatusBadge(invoice.status)}
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`inline-flex w-fit px-2 py-1 text-xs font-medium rounded-full ${statusColors[invoice.status].bg} ${statusColors[invoice.status].text}`}
+                        >
+                          {invoice.status.charAt(0) +
+                            invoice.status.slice(1).toLowerCase()}
+                        </span>
+                        <span
+                          className={`inline-flex w-fit px-2 py-1 text-xs font-medium rounded-full ${paymentStatusColors[invoice.paymentStatus].bg} ${paymentStatusColors[invoice.paymentStatus].text}`}
+                        >
+                          {invoice.paymentStatus.charAt(0) +
+                            invoice.paymentStatus.slice(1).toLowerCase()}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-900">
                       {formatCurrency(invoice.amountDue)}

@@ -8,6 +8,7 @@ import { z } from "zod";
 import Link from "next/link";
 import { PaymentMethod, paymentService } from "@/lib/payments";
 import { Invoice, invoiceService } from "@/lib/invoices";
+import { formatCurrency } from "@/lib/format";
 
 const paymentSchema = z.object({
   invoiceId: z.string().min(1, "Invoice is required"),
@@ -116,13 +117,6 @@ export default function NewPaymentPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (loading) {

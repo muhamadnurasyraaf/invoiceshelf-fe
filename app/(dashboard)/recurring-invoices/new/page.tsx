@@ -12,6 +12,7 @@ import {
 } from "@/lib/recurring-invoices";
 import { customerService, Customer } from "@/lib/customers";
 import { itemService, Item } from "@/lib/items";
+import { formatCurrency } from "@/lib/format";
 
 const recurringItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -124,13 +125,6 @@ export default function NewRecurringInvoicePage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isDataLoading) {
@@ -340,7 +334,7 @@ export default function NewRecurringInvoicePage() {
                 <tbody className="divide-y divide-gray-200">
                   {fields.map((field, index) => {
                     const selectedItem = items.find(
-                      (i) => i.id === watchItems[index]?.itemId
+                      (i) => i.id === watchItems[index]?.itemId,
                     );
                     const lineTotal =
                       (selectedItem?.price || 0) *
@@ -428,7 +422,9 @@ export default function NewRecurringInvoicePage() {
               </table>
             </div>
             {errors.items && !Array.isArray(errors.items) && (
-              <p className="mt-1 text-sm text-red-500">{errors.items.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.items.message}
+              </p>
             )}
           </div>
 

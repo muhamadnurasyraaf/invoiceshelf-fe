@@ -60,8 +60,8 @@ export default function PortalLayout({
               {/* Logo */}
               <Link href="/portal" className="flex-shrink-0 flex items-center">
                 <span className="text-xl font-bold">
-                  <span className="text-indigo-600">INVOICE</span>
-                  <span className="text-gray-900">SHELF</span>
+                  <span className="text-indigo-600">VX</span>
+                  <span className="text-gray-900">INVOICE</span>
                 </span>
               </Link>
 

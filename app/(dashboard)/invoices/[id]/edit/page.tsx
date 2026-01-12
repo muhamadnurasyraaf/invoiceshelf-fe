@@ -6,10 +6,16 @@ import Link from "next/link";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { invoiceService, Invoice, InvoiceStatus } from "@/lib/invoices";
+import {
+  invoiceService,
+  Invoice,
+  InvoiceStatus,
+  PaymentStatus,
+} from "@/lib/invoices";
 import { customerService, Customer } from "@/lib/customers";
 import { itemService, Item } from "@/lib/items";
 import { taxService, Tax } from "@/lib/taxes";
+import { formatCurrency } from "@/lib/format";
 
 const invoiceItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -22,29 +28,26 @@ const invoiceSchema = z.object({
   dueDate: z.string().min(1, "Due date is required"),
   notes: z.string().optional(),
   taxId: z.string().optional(),
-  status: z.enum([
-    "DRAFT",
-    "SENT",
-    "VIEWED",
-    "PAID",
-    "UNPAID",
-    "OVERDUE",
-    "REJECTED",
-  ]),
   items: z.array(invoiceItemSchema).min(1, "At least one item is required"),
 });
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
-const statusOptions: { value: InvoiceStatus; label: string }[] = [
-  { value: "DRAFT", label: "Draft" },
-  { value: "SENT", label: "Sent" },
-  { value: "VIEWED", label: "Viewed" },
-  { value: "PAID", label: "Paid" },
-  { value: "UNPAID", label: "Unpaid" },
-  { value: "OVERDUE", label: "Overdue" },
-  { value: "REJECTED", label: "Rejected" },
-];
+const statusColors: Record<InvoiceStatus, { bg: string; text: string }> = {
+  DRAFT: { bg: "bg-gray-100", text: "text-gray-700" },
+  SENT: { bg: "bg-blue-100", text: "text-blue-700" },
+  VIEWED: { bg: "bg-purple-100", text: "text-purple-700" },
+  COMPLETED: { bg: "bg-green-100", text: "text-green-700" },
+  REJECTED: { bg: "bg-red-100", text: "text-red-700" },
+};
+
+const paymentStatusColors: Record<PaymentStatus, { bg: string; text: string }> =
+  {
+    UNPAID: { bg: "bg-yellow-100", text: "text-yellow-700" },
+    PARTIAL: { bg: "bg-orange-100", text: "text-orange-700" },
+    PAID: { bg: "bg-green-100", text: "text-green-700" },
+    OVERDUE: { bg: "bg-red-100", text: "text-red-700" },
+  };
 
 export default function EditInvoicePage() {
   const router = useRouter();
@@ -104,7 +107,6 @@ export default function EditInvoicePage() {
         dueDate: new Date(invoiceData.dueDate).toISOString().split("T")[0],
         notes: invoiceData.notes || "",
         taxId: invoiceData.taxId || "",
-        status: invoiceData.status,
         items: invoiceData.items.map((item) => ({
           itemId: item.itemId,
           quantity: item.quantity,
@@ -155,13 +157,6 @@ export default function EditInvoicePage() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isLoading) {
@@ -235,26 +230,29 @@ export default function EditInvoicePage() {
               )}
             </div>
 
-            {/* Status */}
+            {/* Status (read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status <span className="text-red-500">*</span>
+                Status
               </label>
-              <select
-                {...register("status")}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-gray-900"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.status && (
-                <p className="mt-1 text-sm text-red-500">
-                  {errors.status.message}
-                </p>
-              )}
+              <div className="flex gap-2 items-center py-2.5">
+                {invoice && (
+                  <>
+                    <span
+                      className={`inline-flex text-xs font-medium px-2.5 py-1 rounded-full ${statusColors[invoice.status].bg} ${statusColors[invoice.status].text}`}
+                    >
+                      {invoice.status.charAt(0) +
+                        invoice.status.slice(1).toLowerCase()}
+                    </span>
+                    <span
+                      className={`inline-flex text-xs font-medium px-2.5 py-1 rounded-full ${paymentStatusColors[invoice.paymentStatus].bg} ${paymentStatusColors[invoice.paymentStatus].text}`}
+                    >
+                      {invoice.paymentStatus.charAt(0) +
+                        invoice.paymentStatus.slice(1).toLowerCase()}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Customer */}

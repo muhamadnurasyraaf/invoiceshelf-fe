@@ -8,6 +8,7 @@ import {
   ExpenseSummary,
   expenseCategoryLabels,
 } from "@/lib/expenses";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -47,20 +48,7 @@ export default function ExpensesPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (date: string) => formatDateLong(date);
 
   if (loading) {
     return (
@@ -107,11 +95,11 @@ export default function ExpensesPage() {
             <p className="text-sm font-medium text-gray-500">Top Category</p>
             <p className="text-2xl font-bold text-gray-900">
               {Object.entries(summary.byCategory).sort(
-                ([, a], [, b]) => b - a
+                ([, a], [, b]) => b - a,
               )[0]?.[0]
                 ? expenseCategoryLabels[
                     Object.entries(summary.byCategory).sort(
-                      ([, a], [, b]) => b - a
+                      ([, a], [, b]) => b - a,
                     )[0][0] as keyof typeof expenseCategoryLabels
                   ]
                 : "N/A"}
@@ -148,10 +136,7 @@ export default function ExpensesPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {expenses.length === 0 ? (
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-4 text-center text-gray-500"
-                >
+                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                   No expenses recorded yet
                 </td>
               </tr>

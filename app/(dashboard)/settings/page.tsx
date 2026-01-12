@@ -9,9 +9,6 @@ export default function SettingsPage() {
     invoiceReminders: true,
     weeklyReports: false,
     darkMode: false,
-    language: "en",
-    currency: "USD",
-    dateFormat: "MM/DD/YYYY",
   });
   const [success, setSuccess] = useState(false);
 
@@ -136,13 +133,6 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleSelect = (key: keyof typeof settings, value: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
   const handleSave = () => {
     // TODO: Implement API call to save settings
     console.log("Settings saved:", settings);
@@ -255,61 +245,6 @@ export default function SettingsPage() {
                   }`}
                 />
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Regional */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Regional Settings
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Language
-              </label>
-              <select
-                value={settings.language}
-                onChange={(e) => handleSelect("language", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
-              >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="ms">Malay</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Currency
-              </label>
-              <select
-                value={settings.currency}
-                onChange={(e) => handleSelect("currency", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
-              >
-                <option value="USD">USD - US Dollar</option>
-                <option value="EUR">EUR - Euro</option>
-                <option value="GBP">GBP - British Pound</option>
-                <option value="MYR">MYR - Malaysian Ringgit</option>
-                <option value="SGD">SGD - Singapore Dollar</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Format
-              </label>
-              <select
-                value={settings.dateFormat}
-                onChange={(e) => handleSelect("dateFormat", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
-              >
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-              </select>
             </div>
           </div>
         </div>

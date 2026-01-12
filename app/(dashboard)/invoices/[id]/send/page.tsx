@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { invoiceService, Invoice, EmailPreview } from "@/lib/invoices";
+import { formatCurrency } from "@/lib/format";
 
 export default function SendInvoicePage() {
   const router = useRouter();
@@ -79,13 +80,6 @@ export default function SendInvoicePage() {
     } finally {
       setIsSending(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isLoading) {
@@ -273,9 +267,7 @@ export default function SendInvoicePage() {
               Email Preview
             </h2>
             {preview && (
-              <p className="text-sm text-gray-500 mt-1">
-                To: {preview.to}
-              </p>
+              <p className="text-sm text-gray-500 mt-1">To: {preview.to}</p>
             )}
           </div>
           <div className="p-4 h-[600px] overflow-auto bg-gray-100">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Payment, paymentService, PaymentSummary } from "@/lib/payments";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 const paymentMethodLabels: Record<string, string> = {
   CASH: "Cash",
@@ -53,20 +54,7 @@ export default function PaymentsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (date: string) => formatDateLong(date);
 
   if (loading) {
     return (
@@ -113,11 +101,11 @@ export default function PaymentsPage() {
             <p className="text-sm font-medium text-gray-500">Top Method</p>
             <p className="text-2xl font-bold text-gray-900">
               {Object.entries(summary.byMethod).sort(
-                ([, a], [, b]) => b - a
+                ([, a], [, b]) => b - a,
               )[0]?.[0]
                 ? paymentMethodLabels[
                     Object.entries(summary.byMethod).sort(
-                      ([, a], [, b]) => b - a
+                      ([, a], [, b]) => b - a,
                     )[0][0]
                   ]
                 : "N/A"}
@@ -157,10 +145,7 @@ export default function PaymentsPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {payments.length === 0 ? (
               <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-4 text-center text-gray-500"
-                >
+                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                   No payments recorded yet
                 </td>
               </tr>

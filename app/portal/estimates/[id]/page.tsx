@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { portalService } from "@/lib/portal";
 import { Estimate } from "@/lib/estimates";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 export default function PortalEstimateDetailPage() {
   const params = useParams();
@@ -57,20 +58,7 @@ export default function PortalEstimateDetailPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-MY", {
-      style: "currency",
-      currency: "MYR",
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const formatDate = (date: string) => formatDateLong(date);
 
   const getStatusBadge = (status: string) => {
     const statusStyles: Record<string, string> = {
@@ -90,8 +78,7 @@ export default function PortalEstimateDetailPage() {
     );
   };
 
-  const canRespond =
-    estimate && ["SENT", "VIEWED"].includes(estimate.status);
+  const canRespond = estimate && ["SENT", "VIEWED"].includes(estimate.status);
 
   if (isLoading) {
     return (

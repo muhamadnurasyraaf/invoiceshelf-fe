@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { MonthlyData, DashboardSummary } from "@/lib/dashboard";
+import { formatCurrency } from "@/lib/format";
 
 interface SalesChartProps {
   monthlyData?: MonthlyData;
@@ -20,15 +21,6 @@ interface SalesChartProps {
 }
 
 export function SalesChart({ monthlyData, summary }: SalesChartProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   // Transform data for the chart
   const chartData = monthlyData
     ? monthlyData.labels.map((label, index) => ({

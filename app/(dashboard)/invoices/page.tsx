@@ -2,17 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { invoiceService, Invoice, InvoiceStatus } from "@/lib/invoices";
+import {
+  invoiceService,
+  Invoice,
+  InvoiceStatus,
+  PaymentStatus,
+} from "@/lib/invoices";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 const statusColors: Record<InvoiceStatus, { bg: string; text: string }> = {
   DRAFT: { bg: "bg-gray-100", text: "text-gray-700" },
   SENT: { bg: "bg-blue-100", text: "text-blue-700" },
   VIEWED: { bg: "bg-purple-100", text: "text-purple-700" },
-  PAID: { bg: "bg-green-100", text: "text-green-700" },
-  UNPAID: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  OVERDUE: { bg: "bg-red-100", text: "text-red-700" },
+  COMPLETED: { bg: "bg-green-100", text: "text-green-700" },
   REJECTED: { bg: "bg-red-100", text: "text-red-700" },
 };
+
+const paymentStatusColors: Record<PaymentStatus, { bg: string; text: string }> =
+  {
+    UNPAID: { bg: "bg-yellow-100", text: "text-yellow-700" },
+    PARTIAL: { bg: "bg-orange-100", text: "text-orange-700" },
+    PAID: { bg: "bg-green-100", text: "text-green-700" },
+    OVERDUE: { bg: "bg-red-100", text: "text-red-700" },
+  };
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -46,29 +58,7 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleStatusChange = async (id: string, status: InvoiceStatus) => {
-    try {
-      const updated = await invoiceService.updateStatus(id, status);
-      setInvoices(invoices.map((i) => (i.id === id ? updated : i)));
-    } catch {
-      setError("Failed to update status");
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (dateString: string) => formatDateLong(dateString);
 
   if (isLoading) {
     return (
@@ -207,24 +197,20 @@ export default function InvoicesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={invoice.status}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          invoice.id,
-                          e.target.value as InvoiceStatus,
-                        )
-                      }
-                      className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer ${statusColors[invoice.status].bg} ${statusColors[invoice.status].text}`}
-                    >
-                      <option value="DRAFT">Draft</option>
-                      <option value="SENT">Sent</option>
-                      <option value="VIEWED">Viewed</option>
-                      <option value="PAID">Paid</option>
-                      <option value="UNPAID">Unpaid</option>
-                      <option value="OVERDUE">Overdue</option>
-                      <option value="REJECTED">Rejected</option>
-                    </select>
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`inline-flex text-xs font-medium px-2.5 py-1 rounded-full w-fit ${statusColors[invoice.status].bg} ${statusColors[invoice.status].text}`}
+                      >
+                        {invoice.status.charAt(0) +
+                          invoice.status.slice(1).toLowerCase()}
+                      </span>
+                      <span
+                        className={`inline-flex text-xs font-medium px-2.5 py-1 rounded-full w-fit ${paymentStatusColors[invoice.paymentStatus].bg} ${paymentStatusColors[invoice.paymentStatus].text}`}
+                      >
+                        {invoice.paymentStatus.charAt(0) +
+                          invoice.paymentStatus.slice(1).toLowerCase()}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -235,7 +221,7 @@ export default function InvoicesPage() {
                         Paid: {formatCurrency(invoice.amountPaid || 0)}
                       </div>
                     )}
-                    {invoice.status !== "PAID" &&
+                    {invoice.paymentStatus !== "PAID" &&
                       (invoice.amountPaid || 0) < invoice.amountDue && (
                         <div className="text-xs text-red-500">
                           Due:{" "}
@@ -252,7 +238,7 @@ export default function InvoicesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
-                      {invoice.status !== "PAID" &&
+                      {invoice.paymentStatus !== "PAID" &&
                         invoice.status !== "DRAFT" && (
                           <Link
                             href={`/payments/new?invoiceId=${invoice.id}`}

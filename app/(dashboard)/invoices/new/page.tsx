@@ -10,6 +10,7 @@ import { invoiceService } from "@/lib/invoices";
 import { customerService, Customer } from "@/lib/customers";
 import { itemService, Item } from "@/lib/items";
 import { taxService, Tax } from "@/lib/taxes";
+import { formatCurrency } from "@/lib/format";
 
 const invoiceItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -122,13 +123,6 @@ export default function NewInvoicePage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isDataLoading) {

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { portalService, PortalDashboard } from "@/lib/portal";
+import { formatCurrency, formatDateLong } from "@/lib/format";
+import { InvoiceStatus, PaymentStatus } from "@/lib/invoices";
 
 export default function PortalDashboardPage() {
   const [dashboard, setDashboard] = useState<PortalDashboard | null>(null);
@@ -23,36 +25,39 @@ export default function PortalDashboardPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-MY", {
-      style: "currency",
-      currency: "MYR",
-    }).format(amount);
+  const formatDate = (date: string) => formatDateLong(date);
+
+  const statusColors: Record<InvoiceStatus, { bg: string; text: string }> = {
+    DRAFT: { bg: "bg-gray-100", text: "text-gray-700" },
+    SENT: { bg: "bg-blue-100", text: "text-blue-700" },
+    VIEWED: { bg: "bg-purple-100", text: "text-purple-700" },
+    COMPLETED: { bg: "bg-green-100", text: "text-green-700" },
+    REJECTED: { bg: "bg-red-100", text: "text-red-700" },
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const paymentStatusColors: Record<
+    PaymentStatus,
+    { bg: string; text: string }
+  > = {
+    UNPAID: { bg: "bg-yellow-100", text: "text-yellow-700" },
+    PARTIAL: { bg: "bg-orange-100", text: "text-orange-700" },
+    PAID: { bg: "bg-green-100", text: "text-green-700" },
+    OVERDUE: { bg: "bg-red-100", text: "text-red-700" },
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, string> = {
-      DRAFT: "bg-gray-100 text-gray-800",
-      SENT: "bg-blue-100 text-blue-800",
-      VIEWED: "bg-purple-100 text-purple-800",
-      PAID: "bg-green-100 text-green-800",
-      UNPAID: "bg-red-100 text-red-800",
-      OVERDUE: "bg-red-100 text-red-800",
-      ACCEPTED: "bg-green-100 text-green-800",
-      REJECTED: "bg-red-100 text-red-800",
-      EXPIRED: "bg-gray-100 text-gray-800",
-    };
+  const estimateStatusStyles: Record<string, string> = {
+    DRAFT: "bg-gray-100 text-gray-800",
+    SENT: "bg-blue-100 text-blue-800",
+    VIEWED: "bg-purple-100 text-purple-800",
+    ACCEPTED: "bg-green-100 text-green-800",
+    REJECTED: "bg-red-100 text-red-800",
+    EXPIRED: "bg-gray-100 text-gray-800",
+  };
+
+  const getEstimateStatusBadge = (status: string) => {
     return (
       <span
-        className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[status] || "bg-gray-100 text-gray-800"}`}
+        className={`px-2 py-1 text-xs font-medium rounded-full ${estimateStatusStyles[status] || "bg-gray-100 text-gray-800"}`}
       >
         {status}
       </span>
@@ -234,7 +239,20 @@ export default function PortalDashboardPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(invoice.status)}
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex w-fit px-2 py-1 text-xs font-medium rounded-full ${statusColors[invoice.status as InvoiceStatus].bg} ${statusColors[invoice.status as InvoiceStatus].text}`}
+                          >
+                            {invoice.status.charAt(0) +
+                              invoice.status.slice(1).toLowerCase()}
+                          </span>
+                          <span
+                            className={`inline-flex w-fit px-2 py-1 text-xs font-medium rounded-full ${paymentStatusColors[invoice.paymentStatus as PaymentStatus].bg} ${paymentStatusColors[invoice.paymentStatus as PaymentStatus].text}`}
+                          >
+                            {invoice.paymentStatus.charAt(0) +
+                              invoice.paymentStatus.slice(1).toLowerCase()}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-right text-gray-900">
                         {formatCurrency(
@@ -305,7 +323,7 @@ export default function PortalDashboardPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(estimate.status)}
+                        {getEstimateStatusBadge(estimate.status)}
                       </td>
                       <td className="px-6 py-4 text-sm text-right text-gray-900">
                         {formatCurrency(estimate.amountDue)}

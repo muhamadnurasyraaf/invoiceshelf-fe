@@ -10,6 +10,7 @@ import {
   TaxReport,
   PaymentReport,
 } from "@/lib/reports";
+import { formatCurrency } from "@/lib/format";
 
 type ReportType =
   | "profit-loss"
@@ -87,13 +88,6 @@ export default function ReportsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   const reportTabs = [

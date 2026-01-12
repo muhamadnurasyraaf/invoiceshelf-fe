@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { portalService } from "@/lib/portal";
 import { Payment } from "@/lib/payments";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 export default function PortalPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -24,20 +25,7 @@ export default function PortalPaymentsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-MY", {
-      style: "currency",
-      currency: "MYR",
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const formatDate = (date: string) => formatDateLong(date);
 
   const formatPaymentMethod = (method: string) => {
     return method.replace(/_/g, " ");

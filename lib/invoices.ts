@@ -7,10 +7,10 @@ export type InvoiceStatus =
   | "DRAFT"
   | "SENT"
   | "VIEWED"
-  | "PAID"
-  | "UNPAID"
-  | "OVERDUE"
+  | "COMPLETED"
   | "REJECTED";
+
+export type PaymentStatus = "UNPAID" | "PARTIAL" | "PAID" | "OVERDUE";
 
 export interface InvoiceItem {
   id: string;
@@ -23,6 +23,7 @@ export interface Invoice {
   id: string;
   number: string;
   status: InvoiceStatus;
+  paymentStatus: PaymentStatus;
   subTotal?: number;
   taxAmount?: number;
   amountDue: number;

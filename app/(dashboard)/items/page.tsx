@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { itemService, Item } from "@/lib/items";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default function ItemsPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -34,13 +35,6 @@ export default function ItemsPage() {
     } catch {
       setError("Failed to delete item");
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isLoading) {

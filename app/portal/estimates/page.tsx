@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { portalService } from "@/lib/portal";
 import { Estimate } from "@/lib/estimates";
+import { formatCurrency, formatDateLong } from "@/lib/format";
 
 export default function PortalEstimatesPage() {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
@@ -25,20 +26,7 @@ export default function PortalEstimatesPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-MY", {
-      style: "currency",
-      currency: "MYR",
-    }).format(amount);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const formatDate = (date: string) => formatDateLong(date);
 
   const getStatusBadge = (status: string) => {
     const statusStyles: Record<string, string> = {

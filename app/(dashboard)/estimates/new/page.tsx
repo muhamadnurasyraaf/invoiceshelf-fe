@@ -9,6 +9,7 @@ import { z } from "zod";
 import { estimateService } from "@/lib/estimates";
 import { customerService, Customer } from "@/lib/customers";
 import { itemService, Item } from "@/lib/items";
+import { formatCurrency } from "@/lib/format";
 
 const estimateItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -95,13 +96,6 @@ export default function NewEstimatePage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   if (isDataLoading) {
@@ -232,7 +226,7 @@ export default function NewEstimatePage() {
                 <tbody className="divide-y divide-gray-200">
                   {fields.map((field, index) => {
                     const selectedItem = items.find(
-                      (i) => i.id === watchItems[index]?.itemId
+                      (i) => i.id === watchItems[index]?.itemId,
                     );
                     const lineTotal =
                       (selectedItem?.price || 0) *
@@ -320,7 +314,9 @@ export default function NewEstimatePage() {
               </table>
             </div>
             {errors.items && !Array.isArray(errors.items) && (
-              <p className="mt-1 text-sm text-red-500">{errors.items.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.items.message}
+              </p>
             )}
           </div>
 
