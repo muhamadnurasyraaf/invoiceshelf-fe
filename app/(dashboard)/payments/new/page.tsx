@@ -82,7 +82,7 @@ export default function NewPaymentPage() {
       const data = await invoiceService.getAll();
       // Filter to show only unpaid/partially paid invoices
       const unpaidInvoices = data.filter(
-        (inv) => inv.status !== "PAID" && inv.status !== "DRAFT",
+        (inv) => inv.paymentStatus !== "PAID" && inv.status !== "DRAFT",
       );
       setInvoices(unpaidInvoices);
 
