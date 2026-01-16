@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   invoiceService,
   Invoice,
   InvoiceStatus,
   PaymentStatus,
 } from "@/lib/invoices";
+import { ocrService, ProcessedInvoiceData } from "@/lib/ocr";
 import { formatCurrency, formatDateLong } from "@/lib/format";
 
 const statusColors: Record<InvoiceStatus, { bg: string; text: string }> = {
@@ -27,9 +29,14 @@ const paymentStatusColors: Record<PaymentStatus, { bg: string; text: string }> =
   };
 
 export default function InvoicesPage() {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrResult, setOcrResult] = useState<ProcessedInvoiceData | null>(null);
+  const [showOcrModal, setShowOcrModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadInvoices();
@@ -58,6 +65,76 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleOcrUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setError("Please upload a valid image file (PNG, JPEG, or WebP)");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size must be less than 10MB");
+      return;
+    }
+
+    setIsOcrProcessing(true);
+    setError(null);
+
+    try {
+      // Convert file to base64
+      const base64 = await fileToBase64(file);
+
+      // Extract and process invoice data using OCR (creates customers/items if needed)
+      const processedData = await ocrService.extractAndProcessInvoice({
+        image: base64,
+        mimeType: file.type,
+      });
+
+      console.log("OCR Processed Data:", processedData);
+      setOcrResult(processedData);
+      setShowOcrModal(true);
+    } catch (err) {
+      console.error("OCR Error:", err);
+      setError("Failed to extract invoice data from image. Please try again.");
+    } finally {
+      setIsOcrProcessing(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data URL prefix (e.g., "data:image/png;base64,")
+        const base64 = result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleUseOcrData = () => {
+    if (ocrResult) {
+      // Store OCR data in sessionStorage to pass to the new invoice page
+      sessionStorage.setItem("ocrInvoiceData", JSON.stringify(ocrResult));
+      router.push("/invoices/new?fromOcr=true");
+    }
+    setShowOcrModal(false);
+  };
+
   const formatDate = (dateString: string) => formatDateLong(dateString);
 
   if (isLoading) {
@@ -78,30 +155,357 @@ export default function InvoicesPage() {
             Create and manage invoices for your clients
           </p>
         </div>
-        <Link
-          href="/invoices/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
+        <div className="flex items-center gap-3">
+          {/* OCR Upload Button */}
+          <label className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm cursor-pointer">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onChange={handleOcrUpload}
+              className="hidden"
+              disabled={isOcrProcessing}
             />
-          </svg>
-          New Invoice
-        </Link>
+            {isOcrProcessing ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Processing...
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Scan Invoice
+              </>
+            )}
+          </label>
+          <Link
+            href="/invoices/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            New Invoice
+          </Link>
+        </div>
       </div>
 
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
           {error}
+        </div>
+      )}
+
+      {/* OCR Result Modal */}
+      {showOcrModal && ocrResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Extracted Invoice Data
+                </h2>
+                <button
+                  onClick={() => setShowOcrModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Invoice Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  {ocrResult.invoiceNumber && (
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 uppercase">
+                        Invoice Number
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {ocrResult.invoiceNumber}
+                      </p>
+                    </div>
+                  )}
+                  {ocrResult.invoiceDate && (
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 uppercase">
+                        Invoice Date
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {ocrResult.invoiceDate}
+                      </p>
+                    </div>
+                  )}
+                  {ocrResult.dueDate && (
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 uppercase">
+                        Due Date
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {ocrResult.dueDate}
+                      </p>
+                    </div>
+                  )}
+                  {ocrResult.currency && (
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 uppercase">
+                        Currency
+                      </label>
+                      <p className="text-sm text-gray-900">
+                        {ocrResult.currency}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Vendor Info */}
+                {(ocrResult.vendorName || ocrResult.vendorEmail) && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Vendor Information
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {ocrResult.vendorName && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Name
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.vendorName}
+                          </p>
+                        </div>
+                      )}
+                      {ocrResult.vendorEmail && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Email
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.vendorEmail}
+                          </p>
+                        </div>
+                      )}
+                      {ocrResult.vendorPhone && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Phone
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.vendorPhone}
+                          </p>
+                        </div>
+                      )}
+                      {ocrResult.vendorAddress && (
+                        <div className="col-span-2">
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Address
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.vendorAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Customer Info */}
+                {(ocrResult.customerName || ocrResult.customerEmail) && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Customer Information
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {ocrResult.customerName && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Name
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.customerName}
+                          </p>
+                        </div>
+                      )}
+                      {ocrResult.customerEmail && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Email
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.customerEmail}
+                          </p>
+                        </div>
+                      )}
+                      {ocrResult.customerPhone && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Phone
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.customerPhone}
+                          </p>
+                        </div>
+                      )}
+                      {ocrResult.customerAddress && (
+                        <div className="col-span-2">
+                          <label className="text-xs font-medium text-gray-500 uppercase">
+                            Address
+                          </label>
+                          <p className="text-sm text-gray-900">
+                            {ocrResult.customerAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Items */}
+                {ocrResult.items && ocrResult.items.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Line Items
+                    </h3>
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                            Description
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                            Qty
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                            Unit Price
+                          </th>
+                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                            Total
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {ocrResult.items.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-3 py-2 text-sm text-gray-900">
+                              {item.description}
+                            </td>
+                            <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                              {item.quantity}
+                            </td>
+                            <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                              {formatCurrency(item.unitPrice)}
+                            </td>
+                            <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                              {formatCurrency(item.total)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Totals */}
+                <div className="border-t pt-4">
+                  <div className="space-y-2">
+                    {ocrResult.subtotal !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Subtotal</span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(ocrResult.subtotal)}
+                        </span>
+                      </div>
+                    )}
+                    {ocrResult.taxRate !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Tax Rate</span>
+                        <span className="text-sm text-gray-900">
+                          {ocrResult.taxRate}%
+                        </span>
+                      </div>
+                    )}
+                    {ocrResult.taxAmount !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">
+                          Tax Amount
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(ocrResult.taxAmount)}
+                        </span>
+                      </div>
+                    )}
+                    {ocrResult.total !== undefined && (
+                      <div className="flex justify-between font-medium">
+                        <span className="text-sm text-gray-700">Total</span>
+                        <span className="text-sm text-gray-900">
+                          {formatCurrency(ocrResult.total)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {ocrResult.notes && (
+                  <div className="border-t pt-4">
+                    <label className="text-xs font-medium text-gray-500 uppercase">
+                      Notes
+                    </label>
+                    <p className="text-sm text-gray-900">{ocrResult.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button
+                  onClick={() => setShowOcrModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUseOcrData}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition"
+                >
+                  Create Invoice with This Data
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

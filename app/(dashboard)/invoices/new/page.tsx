@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,7 @@ import { customerService, Customer } from "@/lib/customers";
 import { itemService, Item } from "@/lib/items";
 import { taxService, Tax } from "@/lib/taxes";
 import { formatCurrency } from "@/lib/format";
+import { ProcessedInvoiceData } from "@/lib/ocr";
 
 const invoiceItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -30,18 +31,24 @@ type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 export default function NewInvoicePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromOcr = searchParams.get("fromOcr") === "true";
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [ocrData, setOcrData] = useState<ProcessedInvoiceData | null>(null);
+  const [ocrNotice, setOcrNotice] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -55,7 +62,7 @@ export default function NewInvoicePage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "items",
   });
@@ -63,9 +70,100 @@ export default function NewInvoicePage() {
   const watchItems = watch("items");
   const watchTaxId = watch("taxId");
 
+  // Load OCR data from sessionStorage first (before loading other data)
+  useEffect(() => {
+    if (fromOcr) {
+      const storedOcrData = sessionStorage.getItem("ocrInvoiceData");
+      if (storedOcrData) {
+        try {
+          const parsed = JSON.parse(storedOcrData) as ProcessedInvoiceData;
+          setOcrData(parsed);
+          sessionStorage.removeItem("ocrInvoiceData");
+        } catch (e) {
+          console.error("Failed to parse OCR data:", e);
+        }
+      }
+    }
+  }, [fromOcr]);
+
+  // Load data (customers, items, taxes) - this will include any newly created from OCR
   useEffect(() => {
     loadData();
   }, []);
+
+  // Apply OCR data to form when both OCR data and reference data are loaded
+  useEffect(() => {
+    if (ocrData && !isDataLoading && items.length > 0) {
+      applyOcrDataToForm(ocrData);
+    }
+  }, [ocrData, isDataLoading, items]);
+
+  const applyOcrDataToForm = (data: ProcessedInvoiceData) => {
+    const notices: string[] = [];
+
+    // Set invoice number if available
+    if (data.invoiceNumber) {
+      setValue("number", data.invoiceNumber);
+    }
+
+    // Set due date if available
+    if (data.dueDate) {
+      setValue("dueDate", data.dueDate);
+    }
+
+    // Set notes if available
+    if (data.notes) {
+      setValue("notes", data.notes);
+    }
+
+    // Use processed customer ID directly if available
+    if (data.customer) {
+      setValue("customerId", data.customer.id);
+      if (data.customer.isNew) {
+        notices.push(
+          `New customer "${data.customer.companyName}" was automatically created.`,
+        );
+      }
+    } else if (data.customerName || data.customerEmail) {
+      // Fallback: customer data was extracted but couldn't be created (missing required fields)
+      notices.push(
+        `Customer "${data.customerName || data.customerEmail}" could not be created (missing required fields). Please select manually or create a new customer.`,
+      );
+    }
+
+    // Try to match tax rate
+    if (data.taxRate) {
+      const matchedTax = taxes.find((t) => t.rate === data.taxRate);
+      if (matchedTax) {
+        setValue("taxId", matchedTax.id);
+      } else {
+        notices.push(
+          `Tax rate of ${data.taxRate}% not found. Please create this tax rate or select manually.`,
+        );
+      }
+    }
+
+    // Use processed items directly if available
+    if (data.processedItems && data.processedItems.length > 0) {
+      const formItems = data.processedItems.map((processedItem) => ({
+        itemId: processedItem.itemId,
+        quantity: processedItem.quantity || 1,
+      }));
+
+      replace(formItems);
+
+      const newItems = data.processedItems.filter((item) => item.isNew);
+      if (newItems.length > 0) {
+        notices.push(
+          `${newItems.length} new item(s) were automatically created: ${newItems.map((i) => i.name).join(", ")}.`,
+        );
+      }
+    }
+
+    if (notices.length > 0) {
+      setOcrNotice(notices.join(" | "));
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -145,11 +243,85 @@ export default function NewInvoicePage() {
           <span>New Invoice</span>
         </div>
         <h1 className="text-2xl font-semibold text-gray-900">New Invoice</h1>
+        {fromOcr && (
+          <p className="text-sm text-purple-600 mt-1">
+            Pre-filled from scanned invoice image
+          </p>
+        )}
       </div>
 
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
           {error}
+        </div>
+      )}
+
+      {ocrNotice && (
+        <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg mb-6">
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <p className="font-medium">OCR Notice</p>
+              <p className="text-sm mt-1">{ocrNotice}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setOcrNotice(null)}
+            className="mt-2 text-sm text-yellow-700 hover:text-yellow-900 underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* OCR Extracted Data Summary */}
+      {fromOcr && ocrData && (
+        <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-6">
+          <h3 className="text-sm font-medium text-purple-900 mb-2">
+            Scanned Invoice Data
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            {ocrData.vendorName && (
+              <div>
+                <span className="text-purple-600">Vendor:</span>{" "}
+                <span className="text-purple-900">{ocrData.vendorName}</span>
+              </div>
+            )}
+            {ocrData.customerName && (
+              <div>
+                <span className="text-purple-600">Customer:</span>{" "}
+                <span className="text-purple-900">{ocrData.customerName}</span>
+              </div>
+            )}
+            {ocrData.total !== undefined && (
+              <div>
+                <span className="text-purple-600">Total:</span>{" "}
+                <span className="text-purple-900">
+                  {formatCurrency(ocrData.total)}
+                </span>
+              </div>
+            )}
+            {ocrData.items && (
+              <div>
+                <span className="text-purple-600">Items:</span>{" "}
+                <span className="text-purple-900">
+                  {ocrData.items.length} line item(s)
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
