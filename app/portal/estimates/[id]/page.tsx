@@ -6,10 +6,12 @@ import Link from "next/link";
 import { portalService } from "@/lib/portal";
 import { Estimate } from "@/lib/estimates";
 import { formatCurrency, formatDateLong } from "@/lib/format";
+import { useToast } from "@/components/ui/toast";
 
 export default function PortalEstimateDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,8 +40,13 @@ export default function PortalEstimateDetailPage() {
     try {
       const updated = await portalService.acceptEstimate(estimate.id);
       setEstimate(updated);
+      showToast(
+        "Estimate accepted! An invoice has been created and sent to you.",
+        "success",
+      );
     } catch (error) {
       console.error("Failed to accept estimate:", error);
+      showToast("Failed to accept estimate", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -51,8 +58,10 @@ export default function PortalEstimateDetailPage() {
     try {
       const updated = await portalService.rejectEstimate(estimate.id);
       setEstimate(updated);
+      showToast("Estimate rejected", "success");
     } catch (error) {
       console.error("Failed to reject estimate:", error);
+      showToast("Failed to reject estimate", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -148,8 +157,53 @@ export default function PortalEstimateDetailPage() {
               </button>
             </>
           )}
+          {estimate.status === "ACCEPTED" && (
+            <Link
+              href="/portal/invoices"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
+              View Invoices
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* Accepted Notice */}
+      {estimate.status === "ACCEPTED" && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <svg
+              className="w-5 h-5 text-green-600 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-green-800">
+                Estimate Accepted
+              </h3>
+              <p className="text-sm text-green-700 mt-1">
+                This estimate has been converted to an invoice. You can view it
+                in your{" "}
+                <Link
+                  href="/portal/invoices"
+                  className="font-medium underline hover:text-green-800"
+                >
+                  Invoices
+                </Link>{" "}
+                section.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Estimate Details */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
