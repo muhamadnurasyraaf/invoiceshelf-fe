@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Payment, paymentService, PaymentSummary } from "@/lib/payments";
 import { formatCurrency, formatDateLong } from "@/lib/format";
+import { useToast } from "@/components/ui/toast";
 
 const paymentMethodLabels: Record<string, string> = {
   CASH: "Cash",
@@ -17,10 +18,12 @@ const paymentMethodLabels: Record<string, string> = {
 };
 
 export default function PaymentsPage() {
+  const { showToast } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -47,10 +50,24 @@ export default function PaymentsPage() {
 
     try {
       await paymentService.delete(id);
+      showToast("Payment deleted successfully", "success");
       fetchData();
     } catch (err) {
-      setError("Failed to delete payment");
+      showToast("Failed to delete payment", "error");
       console.error(err);
+    }
+  };
+
+  const handleDownloadReceipt = async (id: string) => {
+    setDownloadingId(id);
+    try {
+      await paymentService.downloadReceipt(id);
+      showToast("Receipt downloaded successfully", "success");
+    } catch (err) {
+      showToast("Failed to download receipt", "error");
+      console.error(err);
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -178,6 +195,38 @@ export default function PaymentsPage() {
                     {formatCurrency(payment.amount)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                    <button
+                      onClick={() => handleDownloadReceipt(payment.id)}
+                      disabled={downloadingId === payment.id}
+                      className="text-green-600 hover:text-green-900 disabled:opacity-50"
+                      title="Download Receipt"
+                    >
+                      {downloadingId === payment.id ? (
+                        <span className="inline-flex items-center">
+                          <svg
+                            className="animate-spin h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                        </span>
+                      ) : (
+                        "Receipt"
+                      )}
+                    </button>
                     <Link
                       href={`/payments/${payment.id}/edit`}
                       className="text-indigo-600 hover:text-indigo-900"

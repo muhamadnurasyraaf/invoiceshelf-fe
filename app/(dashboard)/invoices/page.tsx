@@ -11,6 +11,7 @@ import {
 } from "@/lib/invoices";
 import { ocrService, ProcessedInvoiceData } from "@/lib/ocr";
 import { formatCurrency, formatDateLong } from "@/lib/format";
+import { useToast } from "@/components/ui/toast";
 
 const statusColors: Record<InvoiceStatus, { bg: string; text: string }> = {
   DRAFT: { bg: "bg-gray-100", text: "text-gray-700" },
@@ -30,9 +31,9 @@ const paymentStatusColors: Record<PaymentStatus, { bg: string; text: string }> =
 
 export default function InvoicesPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrResult, setOcrResult] = useState<ProcessedInvoiceData | null>(null);
   const [showOcrModal, setShowOcrModal] = useState(false);
@@ -48,7 +49,7 @@ export default function InvoicesPage() {
       const data = await invoiceService.getAll();
       setInvoices(data);
     } catch {
-      setError("Failed to load invoices");
+      showToast("Failed to load invoices", "error");
     } finally {
       setIsLoading(false);
     }
@@ -60,8 +61,9 @@ export default function InvoicesPage() {
     try {
       await invoiceService.delete(id);
       setInvoices(invoices.filter((invoice) => invoice.id !== id));
+      showToast("Invoice deleted successfully", "success");
     } catch {
-      setError("Failed to delete invoice");
+      showToast("Failed to delete invoice", "error");
     }
   };
 
@@ -74,18 +76,20 @@ export default function InvoicesPage() {
     // Validate file type
     const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      setError("Please upload a valid image file (PNG, JPEG, or WebP)");
+      showToast(
+        "Please upload a valid image file (PNG, JPEG, or WebP)",
+        "error",
+      );
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError("File size must be less than 10MB");
+      showToast("File size must be less than 10MB", "error");
       return;
     }
 
     setIsOcrProcessing(true);
-    setError(null);
 
     try {
       // Convert file to base64
@@ -100,9 +104,13 @@ export default function InvoicesPage() {
       console.log("OCR Processed Data:", processedData);
       setOcrResult(processedData);
       setShowOcrModal(true);
+      showToast("Invoice scanned successfully", "success");
     } catch (err) {
       console.error("OCR Error:", err);
-      setError("Failed to extract invoice data from image. Please try again.");
+      showToast(
+        "Failed to extract invoice data from image. Please try again.",
+        "error",
+      );
     } finally {
       setIsOcrProcessing(false);
       // Reset file input
@@ -211,12 +219,6 @@ export default function InvoicesPage() {
           </Link>
         </div>
       </div>
-
-      {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
 
       {/* OCR Result Modal */}
       {showOcrModal && ocrResult && (

@@ -220,35 +220,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Appearance */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Appearance
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-700">Dark Mode</p>
-                <p className="text-sm text-gray-500">
-                  Use dark theme for the interface
-                </p>
-              </div>
-              <button
-                onClick={() => handleToggle("darkMode")}
-                className={`relative w-12 h-6 rounded-full transition ${
-                  settings.darkMode ? "bg-indigo-600" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    settings.darkMode ? "left-7" : "left-1"
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Tax Settings */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">

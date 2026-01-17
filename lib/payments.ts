@@ -91,6 +91,23 @@ class PaymentService {
   async delete(id: string): Promise<void> {
     await api.delete(`/payments/${id}`);
   }
+
+  async downloadReceipt(id: string): Promise<void> {
+    const response = await api.get(`/payments/${id}/receipt`, {
+      responseType: "blob",
+    });
+
+    // Create a blob URL and trigger download
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `receipt-${id.slice(-8)}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
 }
 
 export const paymentService = new PaymentService();

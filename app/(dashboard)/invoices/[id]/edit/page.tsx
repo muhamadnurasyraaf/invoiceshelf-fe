@@ -16,6 +16,7 @@ import { customerService, Customer } from "@/lib/customers";
 import { itemService, Item } from "@/lib/items";
 import { taxService, Tax } from "@/lib/taxes";
 import { formatCurrency } from "@/lib/format";
+import { useToast } from "@/components/ui/toast";
 
 const invoiceItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -53,6 +54,7 @@ export default function EditInvoicePage() {
   const router = useRouter();
   const params = useParams();
   const invoiceId = params.id as string;
+  const { showToast } = useToast();
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -151,9 +153,11 @@ export default function EditInvoicePage() {
         taxId: data.taxId || null,
       };
       await invoiceService.update(invoiceId, submitData);
+      showToast("Invoice updated successfully", "success");
       router.push("/invoices");
     } catch {
       setError("Failed to update invoice. Please try again.");
+      showToast("Failed to update invoice", "error");
     } finally {
       setIsSaving(false);
     }

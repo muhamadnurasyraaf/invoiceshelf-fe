@@ -12,6 +12,7 @@ import { itemService, Item } from "@/lib/items";
 import { taxService, Tax } from "@/lib/taxes";
 import { formatCurrency } from "@/lib/format";
 import { ProcessedInvoiceData } from "@/lib/ocr";
+import { useToast } from "@/components/ui/toast";
 
 const invoiceItemSchema = z.object({
   itemId: z.string().min(1, "Item is required"),
@@ -33,6 +34,7 @@ export default function NewInvoicePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromOcr = searchParams.get("fromOcr") === "true";
+  const { showToast } = useToast();
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -215,9 +217,11 @@ export default function NewInvoicePage() {
         taxId: data.taxId || undefined,
       };
       await invoiceService.create(submitData);
+      showToast("Invoice created successfully", "success");
       router.push("/invoices");
     } catch {
       setError("Failed to create invoice. Please try again.");
+      showToast("Failed to create invoice", "error");
     } finally {
       setIsLoading(false);
     }

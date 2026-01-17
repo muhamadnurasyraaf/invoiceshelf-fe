@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/components/ui/toast";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -16,8 +17,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -30,14 +31,14 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    setError(null);
     try {
       await login(data);
+      showToast("Login successful! Redirecting...", "success");
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message);
+        showToast(err.message, "error");
       } else {
-        setError("Invalid credentials. Please try again.");
+        showToast("Invalid credentials. Please try again.", "error");
       }
     } finally {
       setIsLoading(false);
@@ -57,12 +58,6 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email <span className="text-red-500">*</span>
