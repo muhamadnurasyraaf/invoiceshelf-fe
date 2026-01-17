@@ -178,13 +178,13 @@ export default function NewPaymentPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Total Amount:</span>
-                <span className="ml-2 font-medium">
+                <span className="ml-2 font-medium text-gray-900">
                   {formatCurrency(selectedInvoice.amountDue)}
                 </span>
               </div>
               <div>
                 <span className="text-gray-500">Already Paid:</span>
-                <span className="ml-2 font-medium">
+                <span className="ml-2 font-medium text-gray-900">
                   {formatCurrency(selectedInvoice.amountPaid || 0)}
                 </span>
               </div>
@@ -199,7 +199,7 @@ export default function NewPaymentPage() {
               </div>
               <div>
                 <span className="text-gray-500">Status:</span>
-                <span className="ml-2 font-medium">
+                <span className="ml-2 font-medium text-gray-900">
                   {selectedInvoice.status}
                 </span>
               </div>

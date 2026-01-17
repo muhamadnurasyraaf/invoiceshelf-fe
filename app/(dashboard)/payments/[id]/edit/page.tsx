@@ -133,25 +133,25 @@ export default function EditPaymentPage() {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-500">Invoice:</span>
-            <span className="ml-2 font-medium">
+            <span className="ml-2 font-medium text-gray-900">
               {payment.invoice?.number || "N/A"}
             </span>
           </div>
           <div>
             <span className="text-gray-500">Customer:</span>
-            <span className="ml-2 font-medium">
+            <span className="ml-2 font-medium text-gray-900">
               {payment.invoice?.customer?.companyName || "N/A"}
             </span>
           </div>
           <div>
             <span className="text-gray-500">Invoice Total:</span>
-            <span className="ml-2 font-medium">
+            <span className="ml-2 font-medium text-gray-900">
               {formatCurrency(payment.invoice?.amountDue || 0)}
             </span>
           </div>
           <div>
             <span className="text-gray-500">Amount Paid:</span>
-            <span className="ml-2 font-medium">
+            <span className="ml-2 font-medium text-gray-900">
               {formatCurrency(payment.invoice?.amountPaid || 0)}
             </span>
           </div>
@@ -171,7 +171,7 @@ export default function EditPaymentPage() {
             type="number"
             step="0.01"
             {...register("amount", { valueAsNumber: true })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
           {errors.amount && (
             <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>
@@ -185,7 +185,7 @@ export default function EditPaymentPage() {
           </label>
           <select
             {...register("paymentMethod")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           >
             {paymentMethodOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -208,7 +208,7 @@ export default function EditPaymentPage() {
           <input
             type="date"
             {...register("paymentDate")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
         </div>
 
@@ -221,7 +221,7 @@ export default function EditPaymentPage() {
             type="text"
             {...register("reference")}
             placeholder="e.g., TXN-123456"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 placeholder:text-gray-400"
           />
         </div>
 
@@ -233,7 +233,7 @@ export default function EditPaymentPage() {
           <textarea
             {...register("notes")}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
           />
         </div>
 

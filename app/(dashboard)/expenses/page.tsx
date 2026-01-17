@@ -150,7 +150,7 @@ export default function ExpensesPage() {
                     {expense.description}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className="px-2 py-1 text-xs font-medium bg-gray-100 rounded">
+                    <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-900 rounded">
                       {expenseCategoryLabels[expense.category]}
                     </span>
                   </td>

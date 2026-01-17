@@ -224,9 +224,31 @@ export default function EstimatesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/estimates/${estimate.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-400 hover:text-green-600"
+                        title="Download PDF"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </a>
                       <Link
                         href={`/estimates/${estimate.id}/edit`}
                         className="text-gray-400 hover:text-gray-600"
+                        title="Edit"
                       >
                         <svg
                           className="w-5 h-5"
@@ -245,6 +267,7 @@ export default function EstimatesPage() {
                       <button
                         onClick={() => handleDelete(estimate.id)}
                         className="text-red-400 hover:text-red-600"
+                        title="Delete"
                       >
                         <svg
                           className="w-5 h-5"
